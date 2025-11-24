@@ -1,5 +1,5 @@
 # PrimeKG (Precision Medicine Knowledge Graph)
-We use the **Precise Medicine Knowledge Graph (PrimeKG)** [Github](https://github.com/mims-harvard/PrimeKG) [Harvard Dataverse](https://doi.org/10.7910/DVN/IXA7BM) released by the MIMS-Harvard group.
+We use the **Precision Medicine Knowledge Graph (PrimeKG)** [\[Github\]](https://github.com/mims-harvard/PrimeKG) [\[Harvard Dataverse\]](https://doi.org/10.7910/DVN/IXA7BM) released by the MIMS-Harvard group.
 
 PrimeKG integrates 20 curated biomedical resources into a disease-centric, heterogeneous biomedical
 knowledge graph with ~129k nodes (across 10 types) and over 4 million edges (across 29 relation types).
@@ -12,10 +12,10 @@ For the official schema and build pipeline, see the PrimeKG Github and Dataverse
 ## Contents of this dataset mirror
 
 ```bash
-kg.csv            # PrimeKG as released
-kg_directed.csv   # our canonical directed view (similar to TxGNN)
-edges.csv         # undirected index-based edges as released by PrimeKG
-node.csv          # node table as released by PrimeKG
+kg.csv                                    # PrimeKG as released
+kg_directed.csv                           # our canonical directed view (similar to TxGNN)
+edges.csv                                 # undirected index-based edges as released by PrimeKG
+node.csv                                  # node table as released by PrimeKG
 
 extra/HumanDO.obo                         # human disease ontology (from TxGNN)
 extra/mondo_references.csv                # mondo cross-references (from TxGNN)
@@ -38,10 +38,10 @@ splits/
 ---
 
 ## How `kg_directed.csv` is built
-Our preprocessing is nearly identical to TxGNN's [GitHub](https://github.com/mims-harvard/TxGNN) with one small change, noted in step 4.
+Our preprocessing is nearly identical to TxGNN's [\[GitHub\]](https://github.com/mims-harvard/TxGNN) with one small change, noted in step 4.
 
 1. Normalize IDs: convert `x_id` and `y_id` to canonical strings.
-2. Orient drug-disease edges: force drug->disease for `indication`, `contraindication`, and `off-label use`.
+2. Orient drug-disease edges: force drug→disease for `indication`, `contraindication`, and `off-label use`.
 3. Canonical direction per relation:
     - Homogeneous (e.g., `protein_protein`): deduplicate by unordered pair (drop mirrored duplicates).
     - Heterogeneous (e.g., `drug_protein`): pick a canonical direction.
@@ -49,7 +49,7 @@ Our preprocessing is nearly identical to TxGNN's [GitHub](https://github.com/mim
 5. Per-type reindex to get contiguous node indices `x_idx`, `y_idx`.
 
 After these steps our `kg_directed.csv` has: 3,871,729 rows, 30 relation types, 10 node types, 0 exact duplicate triples,
-and 42,631 drug->disease edges.
+and 42,631 drug→disease edges.
 
 
 ### What differs from TxGNN
@@ -72,7 +72,7 @@ Everything else matches the TxGNN preprocessing logic.
 We provide five seeds: 42, 43, 44, 45, 46.
 
 **A) `complex_disease` (TxGNN-style splits for zero-shot focus)**
-- Randomly pick diseases until their drug->disease (DD) edges total ~5% of all DD edges.
+- Randomly pick diseases until their drug→disease (DD) edges total ~5% of all DD edges.
 - Test set = all DD edges for the selected diseases.
 - Train/Val = all remaining edges, of all relations, with ~12% for validation.
 - Each complex disease split folder includes a `meta.json` with counts.
