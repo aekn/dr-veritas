@@ -13,12 +13,12 @@ For more information about our dataset mirror [see the docs](../docs/data.md).
 
 ## Quick start (Colab)
 ```python
-!pip -q install -U huggingface_hub
-
 from huggingface_hub import login, list_repo_files, hf_hub_download
-login() # paste read-only token interactively, DO NOT HARDCODE TOKEN
+from google.colab import userdata
 
-REPO_ID = "aekn/drveritas-primekg-splits"
+login(token=userdata.get("HF_TOKEN")) # add token to Google Colab secrets
+
+REPO_ID = "aekn/dr-dataset"
 
 # list files
 print(*list_repo_files(REPO_ID, repo_type="dataset"), sep="\n")
@@ -26,9 +26,9 @@ print(*list_repo_files(REPO_ID, repo_type="dataset"), sep="\n")
 # download a file and read its head
 kgd = hf_hub_download(
     REPO_ID, repo_type="dataset",
-    filename="kg_directed.csv"
+    filename="kg_directed.parquet"
 )
 import pandas as pd
-print(pd.read_csv(kgd, nrows=5))
+print(pd.read_parquet(kgd, nrows=5))
 ```
 

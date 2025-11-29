@@ -9,79 +9,37 @@ For the official schema and build pipeline, see the PrimeKG Github and Dataverse
 
 ---
 
-## Contents of this dataset mirror
+## Contents of this dataset moirror
+
+The raw dataset and our processed files are located on a private Hugging Face dataset repository.
 
 ```bash
-kg.csv                                    # PrimeKG as released
-kg_directed.csv                           # our canonical directed view (similar to TxGNN)
-edges.csv                                 # undirected index-based edges as released by PrimeKG
-node.csv                                  # node table as released by PrimeKG
+data/
+    kg.csv                                # PrimeKG as released
+    disease_features.tab                  # disease text features as released by PrimeKG
+    drug_features.tab                     # drug text features as released by PrimeKG
 
-extra/HumanDO.obo                         # human disease ontology (from TxGNN)
-extra/mondo_references.csv                # mondo cross-references (from TxGNN)
-extra/kg_grouped_diseases_bert_map.tab    # grouped disease mapping as released by PrimeKG
-extra/disease_features.tab                # disease text features as released by PrimeKG
-extra/drug_features.tab                   # drug text features as released by PrimeKG
+processed/
+    kg_directed.parquet                   # our processed directed KG
+    drug_disease_edges.parquet            # all drug-disease edges
+    
+    mappings/
+        node_table.parquet                # idx mappings for all nodes
+        node_type_table.parquet           # idx mappings for node types
+        relation_table.parquet            # idx mappings for edge types
+    
+    features/
+        {drug, disease}_text.parquet      # drug and disease "label" and "descriptive" text
+        {drug, disease}_sapbert_emb.pt    # SapBERT label text embeddings
+        {drug, disease}_medembed_emb.pt   # MedEmbed descriptive text embeddings
+        {drug, disease}_text_init_emb.pt  # concattenated label and descriptive text embeddings
+    
+    splits/
+        dd_edges_zero_shot_{test/val/train}.parquet   # zero-shot train/val/test splits for drug disease rels
+        dd_edges_random_splits.parquet                # random train/val/test splits for drug disease rels
+        disease_zero_shot_splits.parquet              # train/val/test disease splits
 
-splits/
-    complex_disease/
-        seed_{42..46}/train.csv, valid.csv, test.csv, meta.json
-    random/
-        seed_{42.46}/train.csv, valid.csv, test.csv
 ```
-
-**Schema of `kg_directed.csv` and split files**:
-`relation, display_relation, x_id, x_type, y_id, y_type, x_idx, y_idx`
-- `display_relation` preserves PrimeKG's display labels (which can be used as edge features).
-- `x_idx` & `y_idx` are per-type contiguous indices (e.g., drugs: 0..N_drug-1).
-
----
-
-## How `kg_directed.csv` is built
-Our preprocessing is nearly identical to TxGNN's [\[GitHub\]](https://github.com/mims-harvard/TxGNN) with one small change, noted in step 4.
-
-1. Normalize IDs: convert `x_id` and `y_id` to canonical strings.
-2. Orient drug-disease edges: force drug→disease for `indication`, `contraindication`, and `off-label use`.
-3. Canonical direction per relation:
-    - Homogeneous (e.g., `protein_protein`): deduplicate by unordered pair (drop mirrored duplicates).
-    - Heterogeneous (e.g., `drug_protein`): pick a canonical direction.
-4. Drop exact duplicate triples on (`relation`, `x_id`, `y_id`). This is our only deviation from TxGNN.
-5. Per-type reindex to get contiguous node indices `x_idx`, `y_idx`.
-
-After these steps our `kg_directed.csv` has: 3,871,729 rows, 30 relation types, 10 node types, 0 exact duplicate triples,
-and 42,631 drug→disease edges.
-
-
-### What differs from TxGNN
-TxGNN's script leaves a small set of true duplicate rows in the heterogeneous relation `drug_protein`
-because it doesn't drop identical (`relation`, `x_id`, `y_id`) triples. PrimeKG coarsens fine-grained roles
-(`target`, `enzyme`, `transporter`, `carrier`) under a single `drug_protein` relation, so the same 
-(drug, protein) pair can appear twice with different `display_relation`.
-- We found 185 unique duplicate triples (370 rows) in `drug_protein`.
-- We remove exact duplicates to avoid doubel-counting.
-- If you want to preserve role multiplicity as edge features, keep rows distinct by (`relation`, `x_id`, `y_id`, `display_relaion`)
-instead of dropping exact duplicates.
-
-We did not find duplication in any other relation types.
-
-Everything else matches the TxGNN preprocessing logic.
-
----
-
-## Splits
-We provide five seeds: 42, 43, 44, 45, 46.
-
-**A) `complex_disease` (TxGNN-style splits for zero-shot focus)**
-- Randomly pick diseases until their drug→disease (DD) edges total ~5% of all DD edges.
-- Test set = all DD edges for the selected diseases.
-- Train/Val = all remaining edges, of all relations, with ~12% for validation.
-- Each complex disease split folder includes a `meta.json` with counts.
-- Typical sizes (seed 42): train=3,405,245, val=464,352, test=2,132.
-
-**B) `random` (relation-agnostic splits)**
-- These are uniform row-level splits over all edges: ~5% test, ~12% of the remainder for val, rest train. 
-- The test set is larger for these splits as it covers all relations.
-- Typical sizes (seed 42): train=3,236,766, val=441,377, test=193,586.
 
 ---
 
@@ -90,9 +48,11 @@ We provide five seeds: 42, 43, 44, 45, 46.
 !pip -q install -U huggingface_hub
 
 from huggingface_hub import login, list_repo_files, hf_hub_download
-login() # paste read-only token interactively, DO NOT HARDCODE TOKEN
 
-REPO_ID = "aekn/drveritas-primekg-splits"
+from google.colab import userdata
+login(token=userdata.get("HF_TOKEN"))
+
+REPO_ID = # our repo id
 
 # list files
 print(*list_repo_files(REPO_ID, repo_type="dataset"), sep="\n")
@@ -100,10 +60,10 @@ print(*list_repo_files(REPO_ID, repo_type="dataset"), sep="\n")
 # download a file and read its head
 kgd = hf_hub_download(
     REPO_ID, repo_type="dataset",
-    filename="kg_directed.csv"
+    filename="processed/kg_directed.parquet"
 )
 import pandas as pd
-print(pd.read_csv(kgd, nrows=5))
+print(pd.read_parquet(kgd, nrows=5))
 ```
 
 ---
