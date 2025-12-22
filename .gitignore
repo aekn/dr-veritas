@@ -11,5 +11,4 @@ __pycache__/
 env/
 venv/
 
-data/data/
-data/processed/
+data/*
