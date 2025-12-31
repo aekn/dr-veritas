@@ -1,0 +1,22 @@
+services:
+  db:
+    image: paradedb/paradedb:latest-pg14
+    container_name: vera-db
+    environment:
+      - POSTGRES_USER=vera
+      - POSTGRES_PASSWORD=vera
+      - POSTGRES_DB=vera
+    ports:
+      - "5432:5432"
+    volumes:
+      - vera_db_data:/var/lib/postgresql/data
+      - ./docker/initdb:/docker-entrypoint-initdb.d:ro
+    command: ["postgres", "-c", "shared_preload_libraries=pg_search"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vera -d vera"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  vera_db_data:
