@@ -1,0 +1,9 @@
+from typing import Protocol, BinaryIO
+
+
+class BlobStore(Protocol):
+    def put_bytes(self, key: str, data: bytes) -> None: ...
+
+    def open(self, key: str, mode: str = "rb") -> BinaryIO: ...
+
+    def exists(self, key: str) -> bool: ...

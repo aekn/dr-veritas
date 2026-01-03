@@ -4,8 +4,16 @@ __pycache__/
 
 .DS_Store
 
+
 data/
+.data/
 *.parquet
 *.duckdb
 
 .ipynb_checkpoints/
+
+.env
+
+.ruff_cache/
+
+ideas.md
